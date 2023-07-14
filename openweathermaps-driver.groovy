@@ -1,29 +1,11 @@
 import groovy.transform.Field
 
-@Field static final Map WEATHER_CONDITIONS = [
-    thunderstorm: 'thunderstorm',
-    drizzle: 'drizzle',
-    rain: 'rain',
-    dust: 'dust',
-    sand: 'sand',
-    good: 'good'
-]
-
 metadata {
-    definition(name: 'Open Weather Maps driver', namespace: 'Petro', author: 'Matthew Petro') {
-        capability 'Temperature Measurement'
-        capability 'Pressure Measurement'
+    definition(name: 'OpenWeather driver', namespace: 'Petro', author: 'Matthew Petro') {
         capability 'Refresh'
 
-        attribute 'currentWeatherCondition', 'enum',
-            [
-                WEATHER_CONDITIONS.thunderstorm,
-                WEATHER_CONDITIONS.drizzle,
-                WEATHER_CONDITIONS.rain,
-                WEATHER_CONDITIONS.dust,
-                WEATHER_CONDITIONS.sand,
-                WEATHER_CONDITIONS.good
-            ]
+        attribute 'currentWeatherId', 'number'
+        attribute 'currentWeather', 'string'
         attribute 'currentWindSpeed', 'number'
         attribute 'probabilityOfPrecipitation', 'number'
     }
@@ -62,32 +44,31 @@ def refresh() {
     }
 }
 
-def mapWeatherIdToString(id) {
-    if (id >= 200 && id <= 299) {
-        return WEATHER_CONDITIONS.thunderstorm
-    }
-    if (id >= 300 && id <= 399) {
-        return WEATHER_CONDITIONS.drizzle
-    }
-    if (id >= 500 && id <= 599) {
-        return WEATHER_CONDITIONS.rain
-    }
-    if (id == 731 || id == 761) {
-        return WEATHER_CONDITIONS.dust
-    }
-    if (id == 751) {
-        return WEATHER_CONDITIONS.sand
-    }
-    return WEATHER_CONDITIONS.good
-}
-
 def handleApiResponse(response, data) {
     if (!response.error) {
         if (txtEnable) log.info "${device.displayName}, received updated weather data from API"
-        def weather = mapWeatherIdToString(response.json.current.weather[0].id)
-        def descriptionText = "${device.displayName}, setting current weather condition to ${weather}"
+
+        def descriptionText
+
+        def currentWeatherId = response.json.current.weather[0].id
+        descriptionText = "${device.displayName}, setting current weather ID to ${currentWeatherId}"
         if (txtEnable) log.info descriptionText
-        sendEvent(name: 'currentWeatherCondition', value: weather, descriptionText: descriptionText)
+        sendEvent(name: 'currentWeatherId', value: currentWeatherId, descriptionText: descriptionText)
+
+        def currentWeather = response.json.current.weather[0].main
+        descriptionText = "${device.displayName}, setting current weather to ${currentWeather}"
+        if (txtEnable) log.info descriptionText
+        sendEvent(name: 'currentWeather', value: currentWeather, descriptionText: descriptionText)
+
+        def currentWindSpeed = response.json.current.wind_speed
+        descriptionText = "${device.displayName}, setting current wind speed to ${currentWindSpeed}"
+        if (txtEnable) log.info descriptionText
+        sendEvent(name: 'currentWindSpeed', value: currentWindSpeed, descriptionText: descriptionText)
+
+        def probabilityOfPrecipitation = response.json.hourly[0].pop
+        descriptionText = "${device.displayName}, setting probability of precipitation to ${probabilityOfPrecipitation}"
+        if (txtEnable) log.info descriptionText
+        sendEvent(name: 'probabilityOfPrecipitation', value: probabilityOfPrecipitation, descriptionText: descriptionText)
     } else {
         log.error "Error updating weather data: ${response.status} ${response.errorMessage}"
     }
