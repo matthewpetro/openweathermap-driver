@@ -1,3 +1,6 @@
+// Use OpenWeather's API to get weather data and make it available to apps in Hubitat.
+// OpenWeather's API documentation can be found at https://openweathermap.org/api/one-call-3
+
 import groovy.transform.Field
 
 metadata {
