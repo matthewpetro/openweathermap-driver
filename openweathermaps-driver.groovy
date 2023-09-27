@@ -4,7 +4,7 @@
 import groovy.transform.Field
 
 metadata {
-    definition(name: 'OpenWeather driver', namespace: 'Petro', author: 'Matthew Petro') {
+    definition(name: 'OpenWeather driver', namespace: 'MPetro', author: 'Matthew Petro') {
         capability 'Refresh'
 
         attribute 'currentWeatherId', 'number'
